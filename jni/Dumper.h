@@ -418,10 +418,10 @@ namespace Dumper {
         dumpcs << "}\n\n" << flush;
     }
 
-    void DumpCS(){
+    void DumpCS(string out){
         int classcount = 0;
 
-        dumpcs.open("/sdcard/dump.cs", ofstream::out);
+        dumpcs.open(out + "/dump.cs", ofstream::out);
         //genscript.open("/sdcard/script.py", ofstream::out);
 
         if (dumpcs.is_open()) {
@@ -451,6 +451,8 @@ namespace Dumper {
 			printf("%d Classes Dumped in %fS\n", classcount, elapsed_secs);
 
             dumpcs.close();
+        } else {
+            cout << "Can't Output File" << endl;
         }
     }
 

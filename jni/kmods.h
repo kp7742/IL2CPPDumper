@@ -13,9 +13,11 @@
 #include "Log.h"
 #include "Offsets.h"
 #include "Process.h"
-#include "Memory.h"
+#include "Mem.h"
 #include "MetaData.h"
 #include "Dumper.h"
+#include "ELF/ElfReader.h"
+#include "ELF/ElfRebuilder.h"
 
 static const char* lib_name = "libil2cpp.so";
 

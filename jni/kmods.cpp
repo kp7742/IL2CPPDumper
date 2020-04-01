@@ -2,11 +2,12 @@
 
 using namespace std;
 
-const char* short_options = "hlfsp:g:m:c:o:";
+const char* short_options = "hlrfsp:g:m:c:o:";
 const struct option long_options[] = {
         {"help", no_argument, NULL, 'h'},
         {"lib", no_argument, NULL, 'l'},
         {"package", required_argument, NULL, 'p'},
+        {"raw", no_argument, NULL, 'r'},
         {"fast", no_argument, NULL, 'f'},
         {"script", no_argument, NULL, 's'},
         {"global", required_argument, NULL, 'g'},
@@ -17,15 +18,16 @@ const struct option long_options[] = {
 };
 
 void Usage() {
-    printf("IL2CPPDumper v0.1 <==> Made By KMODs(kp7742)\n");
-    printf("Usage: il2cppdumper <option(s)> -o FilePath\n");
+    printf("IL2CPPDumper v0.2 <==> Made By KMODs(kp7742)\n");
+    printf("Usage: il2cppdumper <option(s)> -o OutputPath\n");
     printf("Dump Lib libil2cpp.so from Memory of Game Process and Generate structure dump.cs\n");
     printf("@@Unity il2cpp v24 Supported Only@@\n");
     printf(" Options:\n");
     printf("--Lib Args--------------------------------------------------------------\n");
     printf("  -l --lib                              Dump libil2cpp.so from Memory\n");
     printf("  -p --package <packageName>            Package Name of Game\n");
-    printf("  -f --fast                             Enable Fast Dumping\n");
+    printf("  -r --raw(Optional)                    Output Raw Lib and Not Rebuild It\n");
+    printf("  -f --fast(Optional)                   Enable Fast Dumping\n");
     printf("                                        (May Miss Some Bytes in Dump)\n");
     printf("--Script Args-----------------------------------------------------------\n");
     printf("  -s --script                           Generate structure dump.cs\n");
@@ -34,14 +36,14 @@ void Usage() {
     printf("  -m --meta    <address>                MetadataRegistration Address\n");
     printf("  -c --code    <address>                CodeRegistration Address\n");
     printf("--Other Args------------------------------------------------------------\n");
-    printf("  -o --output <outputFilePath>          Generate file path\n");
+    printf("  -o --output <outputPath>              File Output path\n");
     printf("  -h --help                             Display this information\n");
 }
 
 int main(int argc, char *argv[]) {
     int c, mode=-1;
     string pkg, output;
-    bool isValidArg = true, isFastDump = false;
+    bool isValidArg = true, isFastDump = false, isRawDump = false;
     kaddr globalMeta = 0, MetaReg = 0, CodeReg = 0;
 
     while((c = getopt_long(argc, argv, short_options, long_options, nullptr)) != -1) {
@@ -51,6 +53,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'p':
                 pkg = optarg;
+                break;
+            case 'r':
+                isRawDump = true;
                 break;
             case 'f':
                 isFastDump = true;
@@ -108,23 +113,88 @@ int main(int argc, char *argv[]) {
         cout << "Lib Size: " << libsize << endl;
 
         clock_t begin = clock();
-        ofstream ldump(output.data(), ofstream::out | ofstream::binary);
-        if (ldump.is_open()) {
-            if(isFastDump){
-                uint8* buffer = new uint8[libsize];
-                memset(buffer, '\0', libsize);
-                vm_readv((void*) start_addr, buffer, libsize);
-                ldump.write((char*)buffer, libsize);
-            } else {
-                char *buffer = new char[1];
-                while (libsize != 0) {
-                    vm_readv((void *) (start_addr++), buffer, 1);
-                    ldump.write(buffer, 1);
-                    --libsize;
+        if(isRawDump){
+            ofstream ldump(output + "/libil2cpp.so", ofstream::out | ofstream::binary);
+            if (ldump.is_open()) {
+                if (isFastDump) {
+                    uint8 *buffer = new uint8[libsize];
+                    memset(buffer, '\0', libsize);
+                    vm_readv((void *) start_addr, buffer, libsize);
+                    ldump.write((char *) buffer, libsize);
+                } else {
+                    char *buffer = new char[1];
+                    while (libsize != 0) {
+                        vm_readv((void *) (start_addr++), buffer, 1);
+                        ldump.write(buffer, 1);
+                        --libsize;
+                    }
                 }
+            } else {
+                cout << "Can't Output File" << endl;
+                return -1;
             }
+            ldump.close();
+        } else {
+            ElfReader elf_reader;
+            string tempPath = output + "/KTemp.dat";
+
+            ofstream ldump(tempPath, ofstream::out | ofstream::binary);
+            if (ldump.is_open()) {
+                if (isFastDump) {
+                    uint8 *buffer = new uint8[libsize];
+                    memset(buffer, '\0', libsize);
+                    vm_readv((void *) start_addr, buffer, libsize);
+                    ldump.write((char *) buffer, libsize);
+                } else {
+                    char *buffer = new char[1];
+                    while (libsize != 0) {
+                        vm_readv((void *) (start_addr++), buffer, 1);
+                        ldump.write(buffer, 1);
+                        --libsize;
+                    }
+                }
+            } else {
+                cout << "Can't Output File" << endl;
+                return -1;
+            }
+            ldump.close();
+
+            //SoFixer Code//
+            elf_reader.setDumpSoFile(true);
+            elf_reader.setDumpSoBaseAddr(start_addr);
+
+            auto file = fopen(tempPath.c_str(), "rb");
+            if(nullptr == file) {
+                printf("source so file cannot found!!!\n");
+                return -1;
+            }
+            auto fd = fileno(file);
+
+            elf_reader.setSource(tempPath.c_str(), fd);
+
+            if(!elf_reader.Load()) {
+                printf("source so file is invalid\n");
+                return -1;
+            }
+
+            ElfRebuilder elf_rebuilder(&elf_reader);
+            if(!elf_rebuilder.Rebuild()) {
+                printf("error occured in rebuilding elf file\n");
+                return -1;
+            }
+            fclose(file);
+            //SoFixer Code//
+
+            ofstream rdump(output + "/libil2cpp.so", ofstream::out | ofstream::binary);
+            if (rdump.is_open()) {
+                rdump.write((char*) elf_rebuilder.getRebuildData(), elf_rebuilder.getRebuildSize());
+            } else {
+                cout << "Can't Output File" << endl;
+                return -1;
+            }
+            remove(tempPath.c_str());
+            rdump.close();
         }
-        ldump.close();
         clock_t end = clock();
 
         double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
@@ -154,7 +224,7 @@ int main(int argc, char *argv[]) {
 
         //Il2cpp Dumping
         MetaData::init(globalMeta, MetaReg, CodeReg);
-        Dumper::DumpCS();
+        Dumper::DumpCS(output);
     } else {
         Usage();
         return -1;
