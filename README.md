@@ -11,7 +11,7 @@ Dump Lib libil2cpp.so from Memory of Game Process and Generate structure dump.cs
 - Support Both Fast & Slow Dumping
  
 ## How to use
-- You can Use latest precompiled Binaries from [HERE](https://github.com/kp7742/IL2CPPDumper/tree/master/lib/) or You Can build your Own.
+- You can Use latest precompiled Binaries from [HERE](https://github.com/kp7742/IL2CPPDumper/tree/master/libs/) or You Can build your Own.
 - Needs Root Access or Virtual Space
 - Get Root Shell through Adb or Terminal Apps(type: 'su') or Normal Shell into Virtual Space via Terminal Apps
 - For Usage Help: il2cppdumper -h
