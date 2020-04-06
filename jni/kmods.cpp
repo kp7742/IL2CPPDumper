@@ -18,7 +18,7 @@ const struct option long_options[] = {
 };
 
 void Usage() {
-    printf("IL2CPPDumper v0.2 <==> Made By KMODs(kp7742)\n");
+    printf("IL2CPPDumper v0.3 <==> Made By KMODs(kp7742)\n");
     printf("Usage: il2cppdumper <option(s)> -o OutputPath\n");
     printf("Dump Lib libil2cpp.so from Memory of Game Process and Generate structure dump.cs\n");
     printf("@@Unity il2cpp v24 Supported Only@@\n");
@@ -160,6 +160,8 @@ int main(int argc, char *argv[]) {
             ldump.close();
 
             //SoFixer Code//
+			cout << "Rebuilding Elf(So)" << endl;
+			
             elf_reader.setDumpSoFile(true);
             elf_reader.setDumpSoBaseAddr(start_addr);
 
