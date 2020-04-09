@@ -18,8 +18,8 @@ const struct option long_options[] = {
 };
 
 void Usage() {
-    printf("IL2CPPDumper v0.3 <==> Made By KMODs(kp7742)\n");
-    printf("Usage: il2cppdumper <option(s)> -o OutputPath\n");
+    printf("IL2CPPDumper v0.4 <==> Made By KMODs(kp7742)\n");
+    printf("Usage: il2cppdumper <option(s)>\n");
     printf("Dump Lib libil2cpp.so from Memory of Game Process and Generate structure dump.cs\n");
     printf("@@Unity il2cpp v24 Supported Only@@\n");
     printf(" Options:\n");
@@ -36,13 +36,13 @@ void Usage() {
     printf("  -m --meta    <address>                MetadataRegistration Address\n");
     printf("  -c --code    <address>                CodeRegistration Address\n");
     printf("--Other Args------------------------------------------------------------\n");
-    printf("  -o --output <outputPath>              File Output path\n");
+    printf("  -o --output <outputPath>              File Output path(Default: /sdcard)\n");
     printf("  -h --help                             Display this information\n");
 }
 
 int main(int argc, char *argv[]) {
     int c, mode=-1;
-    string pkg, output;
+    string pkg, output("/sdcard");
     bool isValidArg = true, isFastDump = false, isRawDump = false;
     kaddr globalMeta = 0, MetaReg = 0, CodeReg = 0;
 

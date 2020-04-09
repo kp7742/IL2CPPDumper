@@ -15,12 +15,12 @@ Dump Lib libil2cpp.so from Memory of Game Process and Generate structure dump.cs
 - Needs Root Access or Virtual Space
 - Get Root Shell through Adb or Terminal Apps(type: 'su') or Normal Shell into Virtual Space via Terminal Apps
 - For Usage Help: il2cppdumper -h
-- For General Usage: il2cppdumper <option(s)> -o OutputPath
+- For General Usage: il2cppdumper <option(s)>
 	```
 	 ./il2cppdumper -h
 	 
-	 IL2CPPDumper v0.3 <==> Made By KMODs(kp7742)
-	 Usage: il2cppdumper <option(s)> -o OutputPath
+	 IL2CPPDumper v0.4 <==> Made By KMODs(kp7742)
+	 Usage: il2cppdumper <option(s)>
 	 Dump Lib libil2cpp.so from Memory of Game Process and Generate structure dump.cs
 	 @@Unity il2cpp v24 Supported Only@@
 	  Options:
